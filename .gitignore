@@ -1,0 +1,13 @@
+*.un~
+*.d
+*.o
+*.bak
+*.swp
+*.bin
+tags
+Scratch*
+scratch*
+a.out
+scratch.*
+log.txt
+Pathfinding
