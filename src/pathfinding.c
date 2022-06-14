@@ -45,6 +45,8 @@ int movement_cost_at(Vec2i pos) {
     return 0;
 }
 
+/* Note to self: Any modifications to the following functions should be
+ * reflected in the GoblinCaves project */
 Vec2iList* bh_line(Vec2i start, Vec2i finish) {
     Vec2iList *results = NULL;
     int e,j,i;

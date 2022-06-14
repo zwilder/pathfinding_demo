@@ -54,4 +54,8 @@ double genrand_real2(void);
 double genrand_real3(void);
 double genrand_res53(void); 
 
+/* Stuff added by Z Wilder below */
+int mt_rand(int min, int max); 
+bool mt_bool(void); 
+bool mt_chance(int chance);
 #endif

@@ -35,7 +35,9 @@
  ******/
 #include <vec2i.h>
 #include <color.h>
+#include <rect.h>
 #include <mt19937.h>
+#include <map.h>
 
 /**********************
  * Function Definitions
