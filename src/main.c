@@ -22,10 +22,13 @@
 
 /* Main will be chonky, gonna have all the non-portable stuff here */
 
+/*********
+ * Globals
+ *********/
 Vec2i g_player;
 Vec2i g_goal;
 Vec2iList *g_path;
-int g_state; /* 0 none, 1 bfs, 2 gbfs, 3 a* */
+int g_state; 
 
 typedef enum {
     S_NONE = 0,
@@ -34,13 +37,19 @@ typedef enum {
     S_ASTAR
 } GameStates;
 
+/***********************
+ * Function Declarations
+ ***********************/
 bool handle_input(void);
-void move_step(void);
+Vec2i move_step(void);
 void update_path(void);
 void draw(void);
 bool curses_setup(void);
 void next_level(void);
 
+/***********
+ * Functions
+ ***********/
 bool handle_input(void) {
     int input = getch();
     bool result = true;
@@ -100,9 +109,12 @@ bool handle_input(void) {
         case '0':
             g_state = S_NONE;
             break;
+        case '5':
+            g_path = dijkstra_map(g_player, false);
+            update_path();
+            break;
         case '.':
-            move_step();
-            return result;
+            newPos = move_step();
             break;
         default:
             break;
@@ -115,7 +127,7 @@ bool handle_input(void) {
     return result;
 }
 
-void move_step(void) {
+Vec2i move_step(void) {
     Vec2i newPos = g_player;
     switch (g_state) {
         case S_BFS:
@@ -130,13 +142,12 @@ void move_step(void) {
         default:
             break;
     }
-    g_player = newPos;
+    return newPos;
 }
 
 void update_path(void) {
     destroy_Vec2i_list(&g_path);
-    switch (g_state) {
-        case S_BFS:
+    switch (g_state) { case S_BFS:
             g_path = bfs_path(g_player,g_goal, true);
             break;
         case S_GBFS:
@@ -165,22 +176,23 @@ void draw(void) {
             hcolor = RED;
             break;
         case S_GBFS:
-            hcolor = CYAN;
+            hcolor = BROWN;
             break;
         case S_ASTAR:
-            hcolor = MAGENTA;
+            hcolor = GREEN;
             break;
         default:
             break;
     }
     
+    erase();
     for(x = 0; x < MAP_WIDTH; x++) {
         for(y = 0; y < MAP_HEIGHT; y++) {
             tile = g_map[x][y];
             if(Vec2i_list_contains(g_path, make_vec(x,y))){
-                setcolor(WHITE,hcolor);
+                setcolor(BRIGHT_WHITE,hcolor);
                 mvaddch(y + yoffset, x + xoffset, tile.ch);
-                unsetcolor(WHITE,hcolor);
+                unsetcolor(BRIGHT_WHITE,hcolor);
             } else {
                 setcolor(tile.fg, tile.bg);
                 mvaddch(y + yoffset, x + xoffset, tile.ch);
@@ -188,9 +200,10 @@ void draw(void) {
             }
         }
     }
-    setcolor(BRIGHT_WHITE, GREEN);
+    setcolor(BRIGHT_WHITE, hcolor);
     mvaddch(yoffset + g_player.y, xoffset + g_player.x, '@');
-    unsetcolor(BRIGHT_WHITE, GREEN);
+    unsetcolor(BRIGHT_WHITE, hcolor);
+    refresh();
 }
 
 bool curses_setup(void) {
@@ -235,6 +248,10 @@ void next_level(void) {
             break;
     }
 }
+
+/******
+ * Main
+ ******/
 
 int main(int argc, char *argv[]) {
     bool running = curses_setup();

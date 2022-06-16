@@ -22,19 +22,22 @@
 Vec2iList* open_neighbors_at(Vec2i pos, bool checkMonsters) {
     Vec2iList *results = NULL;
     int x, y;
+    /*
+    for(x = pos.x - 1, y = pos.y; x <= pos.x + 1; x += 2) {
+        if(!is_blocked(make_vec(x,y)) && in_bounds(make_vec(x,y))) {
+            push_Vec2i_list(&results, make_vec(x,y));
+        }
+    }
+    for(y = pos.y - 1, x = pos.x; y <= pos.y + 1; y += 2) {
+        if(!is_blocked(make_vec(x,y)) && in_bounds(make_vec(x,y))) {
+            push_Vec2i_list(&results, make_vec(x,y));
+        }
+    }
+    */
     for(x = pos.x - 1; x <= pos.x + 1; x++) {
         for(y = pos.y - 1; y <= pos.y + 1; y++) {
             if(!is_blocked(make_vec(x,y)) && in_bounds(make_vec(x,y))) {
                 push_Vec2i_list(&results, make_vec(x,y));
-                /*
-                if(!checkMonsters) {
-                    push_Vec2i_list(&results, make_vec(x,y));
-                } else {
-                    if(!monster_at_pos(g_mlist, make_vec(x,y), g_mapcur->lvl)) {
-                        push_Vec2i_list(&results, make_vec(x,y));
-                    }
-                }
-                    */
             }
         }
     }
@@ -43,7 +46,7 @@ Vec2iList* open_neighbors_at(Vec2i pos, bool checkMonsters) {
 
 int movement_cost_at(Vec2i pos) {
     /*Stupid function, will eventually do something */
-    return 0;
+    return 1;
 }
 
 /* Note to self: Any modifications to the following functions should be
@@ -188,11 +191,50 @@ Vec2iList* breadth_first_search(Vec2i start, bool monsterblock) {
     destroy_Vec2i_list(&neighbors);
     return reached;
 }
-/*
-Vec2iHT* dijkstra_map(Vec2i start, bool monsterblock) {
 
+Vec2iList* dijkstra_map(Vec2i start, bool monsterblock) {
+    Vec2iPQ *frontier = create_Vec2iPQ(start, 0);
+    Vec2iList *neighbors = NULL;
+    Vec2iList *tmp = NULL;
+    Vec2iHT *camefrom = create_Vec2iHT(5000); 
+    Vec2iHT *costSoFar = create_Vec2iHT(5000); 
+    Vec2i cost;
+
+    int p = 0;
+    int newcost = 0;
+    Vec2i cur = NULLVEC;
+    Vec2i next = NULLVEC;
+
+    insert_Vec2iHT(camefrom, start, start);
+    /* The cost is stored in the x of the value, y is 0 */
+    insert_Vec2iHT(costSoFar, start, make_vec(0,0));
+    while(frontier) {
+        cur = pop_Vec2iPQ(&frontier);
+        neighbors = open_neighbors_at(cur, monsterblock);
+        for(tmp = neighbors; tmp; tmp = tmp->next) {
+            next = tmp->item;
+            cost = search_Vec2iHT(costSoFar, cur);
+            newcost = cost.x + 1;//+ movement_cost_at(next);
+            cost = search_Vec2iHT(costSoFar, next);
+            if(vec_null(search_Vec2iHT(costSoFar, next)) || 
+                    (newcost < cost.x)) {
+                insert_Vec2iHT(costSoFar, next, make_vec(newcost, 0));
+                p = newcost;
+                push_Vec2iPQ(&frontier, next, p);
+                insert_Vec2iHT(camefrom, next, cur);
+            }
+        }
+        destroy_Vec2i_list(&neighbors);
+        neighbors = NULL;
+    }
+    destroy_Vec2iHT(costSoFar);
+    destroy_Vec2iPQ(&frontier);
+    destroy_Vec2i_list(&neighbors);
+    write_dijkstra_map(camefrom,start);
+    destroy_Vec2iHT(camefrom);
+    return tmp;
 }
-*/
+
 Vec2i bfs_step(Vec2i start, Vec2i goal, bool monsterblock) {
     Vec2iList *path = bfs_path(start, goal, monsterblock);
     Vec2i result = start;
@@ -353,4 +395,38 @@ Vec2iList* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
     write_htable_csv(camefrom, start, goal);
     destroy_Vec2iHT(camefrom);
     return tmp;
+}
+
+/************************
+ * Temp utility functions
+ ************************/
+void write_dijkstra_map(Vec2iHT *map, Vec2i start) {
+    FILE *fp = fopen("scratch_dijkstra.txt", "w+");
+    int x,y;
+    Vec2i pos;
+    Vec2i cost;
+    fprintf(fp,"Dijkstra Map:\n");
+    for(y = 0; y < MAP_HEIGHT; y++) {
+        for(x = 0; x < MAP_WIDTH; x++) {
+            pos = make_vec(x,y);
+            if(eq_vec(pos, start)) {
+                fprintf(fp, "@ ");
+                continue;
+            }
+            cost = search_Vec2iHT(map, pos);
+            if(!vec_null(cost)) {
+                if(cost.x < 10 ) {
+                    fprintf(fp, "%d ", cost.x);
+                } else if (cost.x < 100) {
+                    fprintf(fp, ".");
+                    //fprintf(fp, "%d", cost.x);
+                } else {
+                    fprintf(fp, ".");
+                }
+            } else {
+                fprintf(fp,"  ");
+            }
+        }
+        fprintf(fp,"\n");
+    }
 }
