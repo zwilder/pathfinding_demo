@@ -202,6 +202,19 @@ void draw(void) {
     }
     setcolor(BRIGHT_WHITE, hcolor);
     mvaddch(yoffset + g_player.y, xoffset + g_player.x, '@');
+    switch (g_state) {
+        case S_BFS:
+            mvprintw(yoffset,xoffset, "BFS       ");
+            break;
+        case S_GBFS:
+            mvprintw(yoffset,xoffset, "GBFS      ");
+            break;
+        case S_ASTAR:
+            mvprintw(yoffset,xoffset, "A*        ");
+            break;
+        default:
+            break;
+    }
     unsetcolor(BRIGHT_WHITE, hcolor);
     refresh();
 }
