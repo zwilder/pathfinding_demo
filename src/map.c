@@ -29,8 +29,9 @@ Tile **g_map = NULL;
 
 Tile tile_table[NUM_TILES] = 
 {
+    {' ',true,BLACK,BLACK},
     {'.',false,WHITE,BLACK},
-    {'#',true,WHITE,WHITE},
+    {'#',true,WHITE,BLACK},
     {'<',false,WHITE,BLACK},
     {'>',false,WHITE,BLACK}
 };
@@ -39,28 +40,30 @@ void place_tile_at(Vec2i pos,int type) {
     g_map[pos.x][pos.y] = tile_table[type];
 }
 
-void generate_map(void) {
-    Tile **g_map = malloc(MAP_WIDTH * sizeof(Tile*));
+Tile** generate_map(void) {
+    Tile **map = malloc(MAP_WIDTH * sizeof(Tile*));
     int x = 0;
     int y = 0;
     for(x = 0; x < MAP_WIDTH; x++) {
-        g_map[x] = malloc(MAP_HEIGHT * sizeof(Tile*));
+        map[x] = malloc(MAP_HEIGHT * sizeof(Tile));
         for(y = 0; y < MAP_HEIGHT; y++) {
-            g_map[x][y] = tile_table[T_WALL];
+            map[x][y] = tile_table[T_EMPTY];
         }
     }
+    return map;
 }
 
 Vec2i build_dungeon(void) {
     /* Build the dungeon, return the start pos */
-    int x,y,w,h,i;
+    Vec2i result;
+    int x,y,w,h;
     Rect newRoom;
     bool intersects;
     int numRooms = 0;
     int attempts = 0;
     int minattempts = 0;
     RectList *rooms = NULL;
-    Vec2i result;
+    RectList *tmp = NULL;
 
     while(numRooms < MIN_NUM_ROOMS && minattempts < 100) {
         while(numRooms < MAX_NUM_ROOMS && attempts < 500) {
@@ -76,11 +79,13 @@ Vec2i build_dungeon(void) {
             }
             newRoom = make_rect(x,y,w,h);
             intersects = false;
-            for(i = 0; i < count_RectList(rooms); i++) {
-               if(rect_intersect(newRoom, rooms[i].data)) {
+            tmp = rooms;
+            while(tmp) {
+                if(rect_intersect(newRoom, tmp->data)) {
                     intersects = true;
                     break;
-               } 
+                }
+                tmp = tmp->next;
             }
             if((newRoom.pos.x + newRoom.dim.x >= MAP_WIDTH) ||
                    (newRoom.pos.y + newRoom.dim.y >= MAP_HEIGHT)) {
@@ -96,13 +101,14 @@ Vec2i build_dungeon(void) {
         minattempts++;
     }
 
-    for(i = 1; i < count_RectList(rooms); i++) {
-        place_corridor(get_center(rooms[i].data), get_center(rooms[i-1].data));
+    tmp = rooms;
+    while(tmp->next) {
+        place_corridor(get_center(tmp->data), get_center(tmp->next->data));
+        tmp = tmp->next;
     }
     
-    i = count_RectList(rooms) - 1; /* last room */
-    place_tile_at(get_center(rooms[i].data), T_DN);
-    result = get_center(rooms[0].data);
+    place_tile_at(get_center(tmp->data), T_DN);
+    result = get_center(rooms->data);
     destroy_RectList(&rooms);
     return result;
 }
@@ -140,6 +146,12 @@ void place_htunnel(int x1, int x2, int y) {
     for(i = min; i <= max; ++i)
     {
         place_tile_at(make_vec(i,y), T_FLOOR);
+        if(g_map[i][y-1].ch == ' ') {
+            place_tile_at(make_vec(i,y-1), T_WALL);
+        }
+        if(g_map[i][y+1].ch == ' ') {
+            place_tile_at(make_vec(i,y+1), T_WALL);
+        }
     }
 }
 
@@ -150,6 +162,12 @@ void place_vtunnel(int y1, int y2, int x) {
     for(i = min; i <= max; ++i)
     {
         place_tile_at(make_vec(x,i), T_FLOOR);
+        if(g_map[x-1][i].ch == ' ') {
+            place_tile_at(make_vec(x-1,i), T_WALL);
+        }
+        if(g_map[x+1][i].ch == ' ') {
+            place_tile_at(make_vec(x+1,i), T_WALL);
+        }
     }
 }
 
@@ -176,4 +194,18 @@ bool in_bounds(Vec2i pos) {
         return false;
     }
     return true;
+}
+
+Vec2i get_stair_pos(void) {
+    Vec2i result;
+    int x,y;
+    for(x = 0; x < MAP_WIDTH; x++) {
+        for(y = 0; y < MAP_HEIGHT; y++) {
+            if(g_map[x][y].ch == '>') {
+                result = make_vec(x,y);
+                break;
+            }
+        }
+    }
+    return result;
 }

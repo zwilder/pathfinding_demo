@@ -24,8 +24,9 @@ Vec2iList* open_neighbors_at(Vec2i pos, bool checkMonsters) {
     int x, y;
     for(x = pos.x - 1; x <= pos.x + 1; x++) {
         for(y = pos.y - 1; y <= pos.y + 1; y++) {
-            /*
-            if(!is_blocked(x,y) && in_bounds(x,y)) {
+            if(!is_blocked(make_vec(x,y)) && in_bounds(make_vec(x,y))) {
+                push_Vec2i_list(&results, make_vec(x,y));
+                /*
                 if(!checkMonsters) {
                     push_Vec2i_list(&results, make_vec(x,y));
                 } else {
@@ -33,8 +34,8 @@ Vec2iList* open_neighbors_at(Vec2i pos, bool checkMonsters) {
                         push_Vec2i_list(&results, make_vec(x,y));
                     }
                 }
+                    */
             }
-            */
         }
     }
     return results;
@@ -189,18 +190,46 @@ Vec2iList* breadth_first_search(Vec2i start, bool monsterblock) {
 }
 /*
 Vec2iHT* dijkstra_map(Vec2i start, bool monsterblock) {
-    Vec
 
 }
 */
+Vec2i gbfs_step(Vec2i start, Vec2i goal, bool monsterblock) {
+    Vec2iList *path = gbfs_path(start, goal, monsterblock);
+    Vec2iList *tmp = path;
+    while(tmp->next) {
+        tmp = tmp->next;
+    }
+    Vec2i result = tmp->item;
+    //Vec2i result = pop_Vec2i_list(&path);
+    destroy_Vec2i_list(&path);
+    return result;
+}
 
-Vec2iHT* bfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
-    /* BFS with early exit, that returns a path from start to goal */
+Vec2i astar_step(Vec2i start, Vec2i goal, bool monsterblock) {
+    Vec2iList *path = astar_path(start, goal, monsterblock);
+    Vec2i result = path->item;
+    write_vlist_csv(path,start,goal);
+    destroy_Vec2i_list(&path);
+    return result;
+}
+
+Vec2iList* construct_path(Vec2iHT *input, Vec2i start, Vec2i goal) {
+    Vec2iList *path = NULL;
+    Vec2i cur = goal;
+    while(!eq_vec(cur, start)) {
+        push_Vec2i_list(&path, cur);
+        cur = search_Vec2iHT(input, cur);
+    }
+    return path;
+}
+
+Vec2iList* bfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
+    /* Best First Search with early exit, that returns a path from start
+     * goal */
     Vec2iList *frontier = create_Vec2i_list(start);
     Vec2iList *neighbors = NULL;
+    Vec2iList *tmp = NULL;
     Vec2iHT *camefrom = create_Vec2iHT(5000); 
-    int count = 0;
-    int i = 0;
     Vec2i cur = NULLVEC;
     Vec2i next = NULLVEC;
 
@@ -212,10 +241,9 @@ Vec2iHT* bfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
             break;
         }
         neighbors = open_neighbors_at(cur, monsterblock);
-        count = count_Vec2i_list(neighbors);
-        for(i = 0; i < count; i++) {
-            next = neighbors[i].item;
-            if(!vec_null(search_Vec2iHT(camefrom, next))) {
+        for(tmp = neighbors; tmp; tmp = tmp->next) {
+            next = tmp->item;
+            if(vec_null(search_Vec2iHT(camefrom, next))) {
                 push_Vec2i_list(&frontier, next);
                 insert_Vec2iHT(camefrom, next, cur);
             }
@@ -225,17 +253,19 @@ Vec2iHT* bfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
     }
     destroy_Vec2i_list(&frontier);
     destroy_Vec2i_list(&neighbors);
-    return camefrom;
+    tmp = construct_path(camefrom, start, goal);
+    write_htable_csv(camefrom, start, goal);
+    destroy_Vec2iHT(camefrom);
+    return tmp;
 }
 
-Vec2iHT* gbfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
+Vec2iList* gbfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
     /* Greedy BFS with early exit, returns path from start to goal.
      * Heuristic: Manhattan Distance */
     Vec2iPQ *frontier = create_Vec2iPQ(start, 0);
     Vec2iList *neighbors = NULL;
+    Vec2iList *tmp = NULL;
     Vec2iHT *camefrom = create_Vec2iHT(5000); 
-    int count = 0;
-    int i = 0;
     int p = 0;
     Vec2i cur = NULLVEC;
     Vec2i next = NULLVEC;
@@ -248,10 +278,9 @@ Vec2iHT* gbfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
             break;
         }
         neighbors = open_neighbors_at(cur, monsterblock);
-        count = count_Vec2i_list(neighbors);
-        for(i = 0; i < count; i++) {
-            next = neighbors[i].item;
-            if(!vec_null(search_Vec2iHT(camefrom, next))) {
+        for(tmp = neighbors; tmp; tmp = tmp->next) {
+            next = tmp->item;
+            if(vec_null(search_Vec2iHT(camefrom, next))) {
                 p = man_dist(goal, next);
                 push_Vec2iPQ(&frontier, next, p);
                 insert_Vec2iHT(camefrom, next, cur);
@@ -262,18 +291,20 @@ Vec2iHT* gbfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
     }
     destroy_Vec2iPQ(&frontier);
     destroy_Vec2i_list(&neighbors);
-    return camefrom;
+    tmp = construct_path(camefrom, start, goal);
+    write_htable_csv(camefrom, start, goal);
+    destroy_Vec2iHT(camefrom);
+    return tmp;
 }
 
-Vec2iHT* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
+Vec2iList* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
     Vec2iPQ *frontier = create_Vec2iPQ(start, 0);
     Vec2iList *neighbors = NULL;
+    Vec2iList *tmp = NULL;
     Vec2iHT *camefrom = create_Vec2iHT(5000); 
     Vec2iHT *costSoFar = create_Vec2iHT(5000); 
     Vec2i cost;
 
-    int count = 0;
-    int i = 0;
     int p = 0;
     int newcost = 0;
     Vec2i cur = NULLVEC;
@@ -289,13 +320,12 @@ Vec2iHT* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
             break;
         }
         neighbors = open_neighbors_at(cur, monsterblock);
-        count = count_Vec2i_list(neighbors);
-        for(i = 0; i < count; i++) {
-            next = neighbors[i].item;
+        for(tmp = neighbors; tmp; tmp = tmp->next) {
+            next = tmp->item;
             cost = search_Vec2iHT(costSoFar, cur);
             newcost = cost.x + movement_cost_at(next);
             cost = search_Vec2iHT(costSoFar, next);
-            if(!vec_null(search_Vec2iHT(costSoFar, next)) || 
+            if(vec_null(search_Vec2iHT(costSoFar, next)) || 
                     (newcost < cost.x)) {
                 insert_Vec2iHT(costSoFar, next, make_vec(newcost, 0));
                 p = newcost + man_dist(goal, next);
@@ -309,5 +339,8 @@ Vec2iHT* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
     destroy_Vec2iHT(costSoFar);
     destroy_Vec2iPQ(&frontier);
     destroy_Vec2i_list(&neighbors);
-    return camefrom;
+    tmp = construct_path(camefrom, start, goal);
+    write_htable_csv(camefrom, start, goal);
+    destroy_Vec2iHT(camefrom);
+    return tmp;
 }

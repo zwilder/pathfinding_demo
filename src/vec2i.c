@@ -409,3 +409,71 @@ void destroy_Vec2iHTList(Vec2iHTList *headref) {
         free(tmp);
     }
 }
+
+/*****************************
+ * Temporary Utility functions
+ *****************************/
+void write_htable_hr(Vec2iHT *table) {
+    int i = 0;
+    Vec2iHTList *head = NULL;
+    FILE *fp = fopen("scratch_log.txt","w+");
+    fprintf(fp,"\n\t********************\n");
+    fprintf(fp,"\tHashTable\n\t********************\n");
+    for(i = 0; i < table->size; i++) {
+        if(table->items[i]) {
+            fprintf(fp,"Index: %d | Key: [%d,%d] | Value: [%d,%d]\n",
+                    i, table->items[i]->key.x,table->items[i]->key.y,
+                    table->items[i]->value.x,table->items[i]->value.y);
+            if(table->ofbuckets[i]) {
+                fprintf(fp,"\t=> Overflow Bucket =>\n");
+                head = table->ofbuckets[i];
+                while(head) {
+                    fprintf(fp,"\tKey: [%d,%d] | Value: [%d,%d]\n",
+                            head->item->key.x,head->item->key.y,
+                            head->item->value.x,head->item->value.y);
+                    head = head->next;
+                }
+            }
+        }
+    }
+    printf("\t********************\n\n");
+    fclose(fp);
+}
+
+void write_htable_csv(Vec2iHT *table, Vec2i start, Vec2i goal) {
+    int i = 0;
+    Vec2iHTList *head = NULL;
+    FILE *fp = fopen("scratch_log.csv","w+");
+    fprintf(fp,",,,,,,sx,sy,gx,gy\n");
+    fprintf(fp,",,,,,,%d,%d,%d,%d\n",start.x,start.y,goal.x,goal.y);
+    fprintf(fp,"index,kx,ky,vx,vy,ofb\n");
+    for(i = 0; i < table->size; i++) {
+        if(table->items[i]) {
+            fprintf(fp,"%d,%d,%d,%d,%d,0\n",
+                    i, table->items[i]->key.x,table->items[i]->key.y,
+                    table->items[i]->value.x,table->items[i]->value.y);
+            if(table->ofbuckets[i]) {
+                head = table->ofbuckets[i];
+                while(head) {
+                    fprintf(fp,",%d,%d,%d,%d,1\n",
+                            head->item->key.x,head->item->key.y,
+                            head->item->value.x,head->item->value.y);
+                    head = head->next;
+                }
+            }
+        }
+    }
+    fclose(fp);
+}
+void write_vlist_csv(Vec2iList *list,Vec2i start, Vec2i goal) {
+    Vec2iList *tmp = list;
+    FILE *fp = fopen("scratch_vlist_log.csv", "w+");
+    fprintf(fp,",,sx,sy,gx,gy\n");
+    fprintf(fp,",,%d,%d,%d,%d\n",start.x,start.y,goal.x,goal.y);
+    fprintf(fp,"x,y\n");
+    while(tmp) {
+        fprintf(fp,"%d,%d\n",tmp->item.x,tmp->item.y);
+        tmp = tmp->next;
+    }
+    fclose(fp);
+}

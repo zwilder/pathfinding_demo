@@ -28,7 +28,8 @@ typedef struct {
 } Tile;
 
 typedef enum {
-    T_FLOOR = 0,
+    T_EMPTY = 0,
+    T_FLOOR,
     T_WALL,
     T_UP,
     T_DN,
@@ -44,7 +45,7 @@ extern const int MAX_NUM_ROOMS;
 extern Tile **g_map;
 
 void place_tile_at(Vec2i pos,int type); 
-void generate_map(void);
+Tile** generate_map(void);
 Vec2i build_dungeon(void);
 void place_room(Rect room);
 void place_corridor(Vec2i a, Vec2i b);
@@ -53,5 +54,6 @@ void place_vtunnel(int y1, int y2, int x);
 void destroy_map(void);
 bool is_blocked(Vec2i pos);
 bool in_bounds(Vec2i pos);
+Vec2i get_stair_pos(void);
 
 #endif
