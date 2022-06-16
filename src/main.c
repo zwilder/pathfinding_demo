@@ -34,7 +34,8 @@ typedef enum {
     S_NONE = 0,
     S_BFS,
     S_GBFS,
-    S_ASTAR
+    S_ASTAR,
+    S_BHL
 } GameStates;
 
 /***********************
@@ -106,6 +107,10 @@ bool handle_input(void) {
             g_state = S_ASTAR;
             update_path();
             break;
+        case '4':
+            g_state = S_BHL;
+            update_path();
+            break;
         case '0':
             g_state = S_NONE;
             break;
@@ -156,6 +161,9 @@ void update_path(void) {
         case S_ASTAR:
             g_path = astar_path(g_player,g_goal, true);
             break;
+        case S_BHL:
+            g_path = bh_line(g_player,g_goal);
+            break;
         default:
             g_path = NULL;
     }
@@ -181,6 +189,9 @@ void draw(void) {
         case S_ASTAR:
             hcolor = GREEN;
             break;
+        case S_BHL:
+            hcolor = CYAN;
+            break;
         default:
             break;
     }
@@ -204,13 +215,16 @@ void draw(void) {
     mvaddch(yoffset + g_player.y, xoffset + g_player.x, '@');
     switch (g_state) {
         case S_BFS:
-            mvprintw(yoffset,xoffset, "BFS       ");
+            mvprintw(yoffset,xoffset, "BFS                     ");
             break;
         case S_GBFS:
-            mvprintw(yoffset,xoffset, "GBFS      ");
+            mvprintw(yoffset,xoffset, "GBFS                    ");
             break;
         case S_ASTAR:
-            mvprintw(yoffset,xoffset, "A*        ");
+            mvprintw(yoffset,xoffset, "A*                      ");
+            break;
+        case S_BHL:
+            mvprintw(yoffset,xoffset, "Bresenham's Line        ");
             break;
         default:
             break;
