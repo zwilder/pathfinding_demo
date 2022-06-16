@@ -193,22 +193,32 @@ Vec2iHT* dijkstra_map(Vec2i start, bool monsterblock) {
 
 }
 */
+Vec2i bfs_step(Vec2i start, Vec2i goal, bool monsterblock) {
+    Vec2iList *path = bfs_path(start, goal, monsterblock);
+    Vec2i result = start;
+    if(path) {
+        result = path->item;
+    }
+    destroy_Vec2i_list(&path);
+    return result;
+}
+
 Vec2i gbfs_step(Vec2i start, Vec2i goal, bool monsterblock) {
     Vec2iList *path = gbfs_path(start, goal, monsterblock);
-    Vec2iList *tmp = path;
-    while(tmp->next) {
-        tmp = tmp->next;
+    Vec2i result = start;
+    if(path) {
+        result = path->item;
     }
-    Vec2i result = tmp->item;
-    //Vec2i result = pop_Vec2i_list(&path);
     destroy_Vec2i_list(&path);
     return result;
 }
 
 Vec2i astar_step(Vec2i start, Vec2i goal, bool monsterblock) {
     Vec2iList *path = astar_path(start, goal, monsterblock);
-    Vec2i result = path->item;
-    write_vlist_csv(path,start,goal);
+    Vec2i result = start;
+    if(path) {
+        result = path->item;
+    }
     destroy_Vec2i_list(&path);
     return result;
 }

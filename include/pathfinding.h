@@ -49,6 +49,7 @@ Vec2iList* bh_line(Vec2i start, Vec2i finish);
 void bh_line_add(Vec2iList **head, Vec2i pos); 
 
 Vec2iList* breadth_first_search(Vec2i start, bool monsterblock); 
+Vec2i bfs_step(Vec2i start, Vec2i goal, bool monsterblock); 
 Vec2i gbfs_step(Vec2i start, Vec2i goal, bool monsterblock);
 Vec2i astar_step(Vec2i start, Vec2i goal, bool monsterblock);
 Vec2iList* construct_path(Vec2iHT *input, Vec2i start, Vec2i goal);

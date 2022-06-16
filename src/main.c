@@ -102,6 +102,7 @@ bool handle_input(void) {
             break;
         case '.':
             move_step();
+            return result;
             break;
         default:
             break;
@@ -115,9 +116,10 @@ bool handle_input(void) {
 }
 
 void move_step(void) {
-    Vec2i newPos;
+    Vec2i newPos = g_player;
     switch (g_state) {
         case S_BFS:
+            newPos = bfs_step(g_player, g_goal, true);
             break;
         case S_GBFS:
             newPos = gbfs_step(g_player, g_goal, true);
@@ -240,7 +242,7 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
 
     g_map = generate_map();
-    g_state = S_NONE;
+    g_state = S_ASTAR;
     next_level();
     while(running) {
         draw();
