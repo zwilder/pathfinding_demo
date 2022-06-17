@@ -24,4 +24,5 @@ void write_htable_hr(Vec2iHT *table);
 void write_htable_csv(Vec2iHT *table, Vec2i start, Vec2i goal);
 void write_vlist_csv(Vec2iList *list,Vec2i start, Vec2i goal);
 void write_dijkstra_map(Vec2iHT *map, Vec2i start);
+void write_explored_map(Vec2iHT *map, Vec2i start, Vec2i goal);
 #endif

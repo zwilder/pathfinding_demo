@@ -116,11 +116,60 @@ void write_dijkstra_map(Vec2iHT *map, Vec2i start) {
                 if(cost.x < 10 ) {
                     fprintf(fp, "%d  ", cost.x);
                 } else if (cost.x < 100) {
-                    //fprintf(fp, ".");
                     fprintf(fp, "%d ", cost.x);
                 } else {
                     fprintf(fp, ".  ");
                 }
+            } else {
+                fprintf(fp," _ ");
+            }
+        }
+        fprintf(fp,"\n");
+    }
+}
+
+void write_explored_map(Vec2iHT *map, Vec2i start, Vec2i goal) {
+    FILE *fp = fopen("scratch_explored.txt", "w");
+    int x,y;
+    Vec2i pos;
+    Vec2i explored;
+    fprintf(fp,"Explored Map:\n   ");
+    for(x = 0; x < MAP_WIDTH; x++) {
+        if(x < 10) {
+            fprintf(fp, " %d ", x);
+        } else {
+            fprintf(fp, " %d", x);
+        }
+    }
+    fprintf(fp, "\n");
+    for(y = 0; y < MAP_HEIGHT; y++) {
+        if(y < 10) {
+            fprintf(fp, "%d : ", y);
+        } else {
+            fprintf(fp, "%d: ", y);
+        }
+        for(x = 0; x < MAP_WIDTH; x++) {
+            pos = make_vec(x,y);
+            if(eq_vec(pos, start)) {
+                fprintf(fp, "@  ");
+                continue;
+            }
+            if(eq_vec(pos, goal)) {
+                fprintf(fp, ">  ");
+                continue;
+            }
+            explored = search_Vec2iHT(map, pos);
+            if(!vec_null(explored)) {
+                fprintf(fp, "x  ");
+                /*
+                if(cost.x < 10 ) {
+                    fprintf(fp, "%d  ", cost.x);
+                } else if (cost.x < 100) {
+                    fprintf(fp, "%d ", cost.x);
+                } else {
+                    fprintf(fp, ".  ");
+                }
+                */
             } else {
                 fprintf(fp," _ ");
             }

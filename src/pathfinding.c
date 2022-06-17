@@ -69,7 +69,9 @@ Vec2iList* open_neighbors_at(Vec2i pos, bool checkMonsters) {
 }
 
 int movement_cost_at(Vec2i pos) {
-    /*Stupid function, will eventually do something */
+    /* This function will check tile flags, returning movment costs. For
+     * instance, a closed door has a movement cost of 2, since it takes 1 turn
+     * to open the door. */
     return 1;
 }
 
@@ -371,6 +373,7 @@ Vec2iList* gbfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
     destroy_Vec2iPQ(&frontier);
     destroy_Vec2i_list(&neighbors);
     tmp = construct_path(camefrom, start, goal);
+    //write_explored_map(camefrom, start, goal);
     //write_htable_csv(camefrom, start, goal);
     destroy_Vec2iHT(camefrom);
     return tmp;
@@ -417,6 +420,7 @@ Vec2iList* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
     }
     tmp = construct_path(camefrom, start, goal);
     //write_dijkstra_map(costSoFar, start);
+    //write_explored_map(costSoFar, start, goal);
     destroy_Vec2iPQ(&frontier);
     destroy_Vec2i_list(&neighbors);
     destroy_Vec2iHT(costSoFar);
