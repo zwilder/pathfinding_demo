@@ -227,10 +227,11 @@ Vec2iList* dijkstra_map(Vec2i start, bool monsterblock) {
         destroy_Vec2i_list(&neighbors);
         neighbors = NULL;
     }
+    write_htable_csv(costSoFar,start,make_vec(0,0));
+    write_dijkstra_map(costSoFar,start);
     destroy_Vec2iHT(costSoFar);
     destroy_Vec2iPQ(&frontier);
     destroy_Vec2i_list(&neighbors);
-    write_dijkstra_map(camefrom,start);
     destroy_Vec2iHT(camefrom);
     return tmp;
 }
@@ -306,7 +307,7 @@ Vec2iList* bfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
     destroy_Vec2i_list(&frontier);
     destroy_Vec2i_list(&neighbors);
     tmp = construct_path(camefrom, start, goal);
-    write_htable_csv(camefrom, start, goal);
+    //write_htable_csv(camefrom, start, goal);
     destroy_Vec2iHT(camefrom);
     return tmp;
 }
@@ -344,7 +345,7 @@ Vec2iList* gbfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
     destroy_Vec2iPQ(&frontier);
     destroy_Vec2i_list(&neighbors);
     tmp = construct_path(camefrom, start, goal);
-    write_htable_csv(camefrom, start, goal);
+    //write_htable_csv(camefrom, start, goal);
     destroy_Vec2iHT(camefrom);
     return tmp;
 }
@@ -406,41 +407,8 @@ Vec2iList* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
     destroy_Vec2iPQ(&frontier);
     destroy_Vec2i_list(&neighbors);
     tmp = construct_path(camefrom, start, goal);
-    write_htable_csv(camefrom, start, goal);
+    //write_htable_csv(camefrom, start, goal);
     destroy_Vec2iHT(camefrom);
     return tmp;
 }
 
-/************************
- * Temp utility functions
- ************************/
-void write_dijkstra_map(Vec2iHT *map, Vec2i start) {
-    FILE *fp = fopen("scratch_dijkstra.txt", "w+");
-    int x,y;
-    Vec2i pos;
-    Vec2i cost;
-    fprintf(fp,"Dijkstra Map:\n");
-    for(y = 0; y < MAP_HEIGHT; y++) {
-        for(x = 0; x < MAP_WIDTH; x++) {
-            pos = make_vec(x,y);
-            if(eq_vec(pos, start)) {
-                fprintf(fp, "@ ");
-                continue;
-            }
-            cost = search_Vec2iHT(map, pos);
-            if(!vec_null(cost)) {
-                if(cost.x < 10 ) {
-                    fprintf(fp, "%d ", cost.x);
-                } else if (cost.x < 100) {
-                    fprintf(fp, ".");
-                    //fprintf(fp, "%d", cost.x);
-                } else {
-                    fprintf(fp, ".");
-                }
-            } else {
-                fprintf(fp,"  ");
-            }
-        }
-        fprintf(fp,"\n");
-    }
-}

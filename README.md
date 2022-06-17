@@ -24,6 +24,11 @@ Press the corresponding key to show the path highlighted, `0` to show no path.
 Move the `@` with the VI keys or the arrow keys, the path will update. Press `.`
 to take an automatic step along the path.
 
+Press `5` to write a dijkstra map to a text file showing how far each open tile
+is from the player.
+
+![Screenshot](media/Dijkstra.png)
+
 Needs NCurses installed to work - and should work on anything with a terminal.
 Only tested on Linux.
 [![Run on Repl.it](https://repl.it/badge/github/zwilder/pathfinding_demo)](https://replit.com/@zwilder/pathfinding_demo)

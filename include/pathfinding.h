@@ -38,6 +38,7 @@
 #include <rect.h>
 #include <mt19937.h>
 #include <map.h>
+#include <log.h>
 
 /**********************
  * Function Definitions
@@ -58,5 +59,4 @@ Vec2iList* bfs_path(Vec2i start, Vec2i goal, bool monsterblock);
 Vec2iList* gbfs_path(Vec2i start, Vec2i goal, bool monsterblock); 
 Vec2iList* astar_path(Vec2i start, Vec2i goal, bool monsterblock); 
 
-void write_dijkstra_map(Vec2iHT *map, Vec2i start);
 #endif
