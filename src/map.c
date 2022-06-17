@@ -113,6 +113,34 @@ Vec2i build_dungeon(void) {
     return result;
 }
 
+Vec2i build_redblob(void) {
+    Vec2i pos = make_vec(1,12);
+    int x,y;
+    for(x = 0; x < MAP_WIDTH; x++) {
+        for(y = 0; y < MAP_HEIGHT; y++) {
+            place_tile_at(make_vec(x,y), T_FLOOR);
+        }
+    }
+    for(x = 0; x < MAP_WIDTH; x++) {
+        place_tile_at(make_vec(x,0),T_WALL);
+        place_tile_at(make_vec(x,MAP_HEIGHT - 1),T_WALL);
+    }
+    for(y = 0; y < MAP_HEIGHT; y ++) {
+        place_tile_at(make_vec(0,y),T_WALL);
+        place_tile_at(make_vec(MAP_WIDTH - 1, y),T_WALL);
+    }
+    for(x = 3; x < 16; x++) { 
+        place_tile_at(make_vec(x,12),T_WALL);
+    }
+    for(x = 6; x < 16; x++) {
+        place_tile_at(make_vec(x,3),T_WALL);
+    }
+    for(y = 3; y < 13; y++) {
+        place_tile_at(make_vec(15,y),T_WALL);
+    }
+    return pos;
+}
+
 void place_room(Rect room) {
     int x, y;
     for(x = room.pos.x; x <= room.pos.x + room.dim.x; x++){

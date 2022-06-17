@@ -47,6 +47,7 @@ extern Tile **g_map;
 void place_tile_at(Vec2i pos,int type); 
 Tile** generate_map(void);
 Vec2i build_dungeon(void);
+Vec2i build_redblob(void); 
 void place_room(Rect room);
 void place_corridor(Vec2i a, Vec2i b);
 void place_htunnel(int x1, int x2, int y);

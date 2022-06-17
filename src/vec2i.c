@@ -51,6 +51,13 @@ bool vec_null(Vec2i a) {
 
 int man_dist(Vec2i a, Vec2i b) {
     return (abs(a.x - b.x) + abs(a.y - b.y));
+    /*
+    int dx = a.x > b.x ? a.x : b.x;
+    dx -= a.x < b.x ? a.x : b.x;
+    int dy = a.y > b.y ? a.y : b.y;
+    dy -= a.y < b.y ? a.y : b.y;
+    return (dx + dy);
+    */
 }
 
 /* If D and D2 = 1, then this is Chebyshev distance,
@@ -67,6 +74,14 @@ float octile_dist(Vec2i a, Vec2i b) {
     int dy = abs(a.y - b.y);
     int min = (dx < dy) ? dx : dy;
     return (dx + dy) + ((sqrt(2) - 2) * min);
+}
+
+int diag_dist(Vec2i a, Vec2i b) {
+    /* D = 1 D2 = 2 */
+    int dx = abs(a.x - b.x);
+    int dy = abs(a.y - b.y);
+    int min = (dx < dy) ? dx : dy;
+    return ((dx + dy) * min);
 }
 
 /***********
@@ -219,9 +234,6 @@ Vec2iHT* create_Vec2iHT(int size) {
 }
 
 void destroy_Vec2iHTItem(Vec2iHTItem *item) {
-    if(!item) {
-        return;
-    }
     free(item);
 }
 
@@ -230,9 +242,7 @@ void destroy_Vec2iHT(Vec2iHT *table) {
     Vec2iHTItem *item = NULL;
     for(i = 0; i < table->size; i++) {
         item = table->items[i];
-        if(item) {
-            destroy_Vec2iHTItem(item);
-        }
+        destroy_Vec2iHTItem(item);
     }
     destroy_Vec2iHT_ofbuckets(table);
     free(table->items);
@@ -268,8 +278,9 @@ void insert_Vec2iHT(Vec2iHT *table, Vec2i key, Vec2i value) {
     } else {
         /* Key exists */
         if(eq_vec(cur->key, key)) {
-            /* Same key, update value */
+            /* Same key, update value, destroy unneeded new item*/
             table->items[index]->value = value;
+            destroy_Vec2iHTItem(item); 
         } else {
             handle_Vec2iHT_collision(table, index, item);
         }

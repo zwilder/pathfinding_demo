@@ -73,6 +73,7 @@ bool vec_null(Vec2i a);
 int man_dist(Vec2i a, Vec2i b);
 int chebyshev_dist(Vec2i a, Vec2i b);
 float octile_dist(Vec2i a, Vec2i b);
+int diag_dist(Vec2i a, Vec2i b); 
 
 /***********
  * Vec2iList

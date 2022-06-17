@@ -95,6 +95,16 @@ bool handle_input(void) {
             next_level();
             newPos = g_player;
             break;
+        case '<':
+            destroy_map();
+            g_map = generate_map();
+            g_player = build_redblob();
+            place_tile_at(make_vec(14,2),T_DN);
+            g_goal = get_stair_pos();
+            destroy_Vec2i_list(&g_path);
+            update_path();
+            newPos = g_player;
+            break;
         case '1':
             g_state = S_BFS;
             update_path();
@@ -115,8 +125,7 @@ bool handle_input(void) {
             g_state = S_NONE;
             break;
         case '5':
-            g_path = dijkstra_map(g_player, false);
-            update_path();
+            destroy_Vec2iHT(dijkstra_map(g_player, false));
             break;
         case '.':
             newPos = move_step();
@@ -152,7 +161,8 @@ Vec2i move_step(void) {
 
 void update_path(void) {
     destroy_Vec2i_list(&g_path);
-    switch (g_state) { case S_BFS:
+    switch (g_state) { 
+        case S_BFS:
             g_path = bfs_path(g_player,g_goal, true);
             break;
         case S_GBFS:
@@ -215,18 +225,23 @@ void draw(void) {
     mvaddch(yoffset + g_player.y, xoffset + g_player.x, '@');
     switch (g_state) {
         case S_BFS:
-            mvprintw(yoffset,xoffset, "BFS                     ");
+            mvprintw(yoffset,xoffset, "[1] BFS: %d steps to goal.", 
+                    count_Vec2i_list(g_path));
             break;
         case S_GBFS:
-            mvprintw(yoffset,xoffset, "GBFS                    ");
+            mvprintw(yoffset,xoffset, "[2] GBFS: %d steps to goal.", 
+                    count_Vec2i_list(g_path));
             break;
         case S_ASTAR:
-            mvprintw(yoffset,xoffset, "A*                      ");
+            mvprintw(yoffset,xoffset, "[3] A*: %d steps to goal.", 
+                    count_Vec2i_list(g_path));
             break;
         case S_BHL:
-            mvprintw(yoffset,xoffset, "Bresenham's Line        ");
+            mvprintw(yoffset,xoffset, "[4] Bresenham's Line: %d distance to goal.",
+                    count_Vec2i_list(g_path));
             break;
         default:
+            mvprintw(yoffset,xoffset, "Press: [1]BFS [2]GBFS [3]A* [4]Bresenham's Line [5] Export Dijkstra");
             break;
     }
     unsetcolor(BRIGHT_WHITE, hcolor);
@@ -238,7 +253,7 @@ bool curses_setup(void) {
 
     initscr();
     noecho();
-    /*nodelay(stdscr, true);*/
+    nodelay(stdscr, true);
     curs_set(0);
     cbreak();
     keypad(stdscr, true);
