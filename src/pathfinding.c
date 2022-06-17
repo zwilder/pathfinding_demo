@@ -214,7 +214,7 @@ Vec2iList* dijkstra_map(Vec2i start, bool monsterblock) {
         for(tmp = neighbors; tmp; tmp = tmp->next) {
             next = tmp->item;
             cost = search_Vec2iHT(costSoFar, cur);
-            newcost = cost.x + 1;//+ movement_cost_at(next);
+            newcost = cost.x + movement_cost_at(next);
             cost = search_Vec2iHT(costSoFar, next);
             if(vec_null(search_Vec2iHT(costSoFar, next)) || 
                     (newcost < cost.x)) {
@@ -357,10 +357,13 @@ Vec2iList* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
     Vec2iHT *costSoFar = create_Vec2iHT(5000); 
     Vec2i cost;
 
+    int dx1,dy1,dx2,dy2,cross;
+    float heuristic;
     int p = 0;
     int newcost = 0;
     Vec2i cur = NULLVEC;
     Vec2i next = NULLVEC;
+
 
     insert_Vec2iHT(camefrom, start, start);
     /* The cost is stored in the x of the value, y is 0 */
@@ -371,6 +374,11 @@ Vec2iList* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
             /* Early exit, found goal */
             break;
         }
+        dx1 = cur.x - goal.x;
+        dy1 = cur.y - goal.y;
+        dx2 = start.x - goal.x;
+        dy2 = start.y - goal.y;
+        cross = abs((dx1 * dy2) - (dx2 * dy1));
         neighbors = open_neighbors_at(cur, monsterblock);
         for(tmp = neighbors; tmp; tmp = tmp->next) {
             next = tmp->item;
@@ -380,7 +388,13 @@ Vec2iList* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
             if(vec_null(search_Vec2iHT(costSoFar, next)) || 
                     (newcost < cost.x)) {
                 insert_Vec2iHT(costSoFar, next, make_vec(newcost, 0));
-                p = newcost + man_dist(goal, next);
+                //heuristic = octile_dist(goal,next);
+                //heuristic = chebyshev_dist(goal,next);
+                heuristic = man_dist(goal,next);
+                heuristic += cross*0.001;
+                //p = newcost + man_dist(goal, next);
+                //p = newcost + chebyshev_dist(goal, next);
+                p = newcost + heuristic;
                 push_Vec2iPQ(&frontier, next, p);
                 insert_Vec2iHT(camefrom, next, cur);
             }

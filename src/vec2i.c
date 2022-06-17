@@ -53,6 +53,22 @@ int man_dist(Vec2i a, Vec2i b) {
     return (abs(a.x - b.x) + abs(a.y - b.y));
 }
 
+/* If D and D2 = 1, then this is Chebyshev distance,
+ * If D = 1 and D2 = sqrt(2), then this is octile distance */
+int chebyshev_dist(Vec2i a, Vec2i b) {
+    int dx = abs(a.x - b.x);
+    int dy = abs(a.y - b.y);
+    int min = (dx < dy) ? dx : dy;
+    return ((dx + dy)) + (-1 * min);
+}
+
+float octile_dist(Vec2i a, Vec2i b) {
+    int dx = abs(a.x - b.x);
+    int dy = abs(a.y - b.y);
+    int min = (dx < dy) ? dx : dy;
+    return (dx + dy) + ((sqrt(2) - 2) * min);
+}
+
 /***********
  * Vec2iList
  ***********/

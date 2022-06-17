@@ -282,8 +282,8 @@ void next_level(void) {
 
 int main(int argc, char *argv[]) {
     bool running = curses_setup();
-    init_genrand(time(NULL));
-    srand(time(NULL));
+    //init_genrand(time(NULL));
+    //srand(time(NULL));
 
     g_map = generate_map();
     g_state = S_ASTAR;
