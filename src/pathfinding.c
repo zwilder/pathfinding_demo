@@ -19,8 +19,8 @@
 */
 #include <pathfinding.h>
 
-Vec2iList* open_neighbors_at(Vec2i pos, bool checkMonsters) {
-    Vec2iList *results = NULL;
+Vec2iPQ* open_neighbors_at(Vec2i pos, bool checkMonsters) {
+    Vec2iPQ *results = NULL;
     int x, y;
     Vec2i tl,tr,bl,br;
     // Diagonal
@@ -29,27 +29,27 @@ Vec2iList* open_neighbors_at(Vec2i pos, bool checkMonsters) {
     bl = make_vec(pos.x - 1, pos.y + 1);
     br = make_vec(pos.x + 1, pos.y + 1);
     if(!is_blocked(tl) && in_bounds(tl)){
-        push_Vec2i_list(&results, tl);
+        push_Vec2iPQ(&results, tl, 2);
     }
     if(!is_blocked(tr) && in_bounds(tr)){
-        push_Vec2i_list(&results, tr);
+        push_Vec2iPQ(&results, tr, 2);
     }
     if(!is_blocked(bl) && in_bounds(bl)){
-        push_Vec2i_list(&results, bl);
+        push_Vec2iPQ(&results, bl, 2);
     }
     if(!is_blocked(br) && in_bounds(br)){
-        push_Vec2i_list(&results, br);
+        push_Vec2iPQ(&results, br, 2);
     }
                
     // Cardinal
     for(x = pos.x - 1, y = pos.y; x <= pos.x + 1; x += 2) {
         if(!is_blocked(make_vec(x,y)) && in_bounds(make_vec(x,y))) {
-            push_Vec2i_list(&results, make_vec(x,y));
+            push_Vec2iPQ(&results, make_vec(x,y), 1);
         }
     }
     for(y = pos.y - 1, x = pos.x; y <= pos.y + 1; y += 2) {
         if(!is_blocked(make_vec(x,y)) && in_bounds(make_vec(x,y))) {
-            push_Vec2i_list(&results, make_vec(x,y));
+            push_Vec2iPQ(&results, make_vec(x,y), 1);
         }
     }
     /*
@@ -72,9 +72,45 @@ int movement_cost_at(Vec2i pos) {
     /* This function will check tile flags, returning movment costs. For
      * instance, a closed door has a movement cost of 2, since it takes 1 turn
      * to open the door. */
-    return 1;
+    return 100;
 }
 
+int movement_cost_to(Vec2i a, Vec2i b) {
+    /*
+     * . 1 2 3
+     * 1 . b .
+     * 2 a . .
+     * 3 . . . 
+     *
+     * a - b = (1,2) - (2,1) = (-1,1)
+     *
+     * . 1 2 3
+     * 1 . b .
+     * 2 . a .
+     * 3 . . . 
+     * a - b = (2,2) - (2,1) = (0,1)
+     *
+     * . 1 2 3
+     * 1 . b a
+     * 2 . . .
+     * 3 . . . 
+     * a - b = (3,1) - (2,1) = (1,0)
+     *
+     * Looking for change in BOTH x and y when subtracting the vectors. A single
+     * diagonal step will also end up as (-1,-1) (-1,1),(1,1), (1,-1)
+     */
+    Vec2i sub = subtract_vec(a,b);
+    static Vec2i tl = {-1,-1};// make_vec(-1,-1);
+    static Vec2i tr = {1,-1}; //make_vec(1,-1);
+    static Vec2i bl = {-1,1}; //make_vec(-1,1);
+    static Vec2i br = {1,1}; //make_vec(1,1);
+    if (eq_vec(sub,tl) || eq_vec(sub,tr) ||
+            eq_vec(sub,bl) || eq_vec(sub,br)) {
+        return 142;//sqrt(2);
+    } else {
+        return 100;
+    }
+}
 /* Note to self: Any modifications to the following functions should be
  * reflected in the GoblinCaves project */
 Vec2iList* bh_line(Vec2i start, Vec2i finish) {
@@ -194,7 +230,8 @@ Vec2iList* breadth_first_search(Vec2i start, bool monsterblock) {
      * in the future. */
     Vec2iList *reached = create_Vec2i_list(start);
     Vec2iList *frontier = create_Vec2i_list(start);
-    Vec2iList *neighbors = NULL;
+    Vec2iPQ *neighbors = NULL;
+    Vec2iPQ *tmp = NULL;
     int count = 0;
     int i = 0;
     Vec2i cur = NULLVEC;
@@ -202,26 +239,27 @@ Vec2iList* breadth_first_search(Vec2i start, bool monsterblock) {
     while(frontier) {
         cur = pop_Vec2i_list(&frontier);
         neighbors = open_neighbors_at(cur, monsterblock);
-        count = count_Vec2i_list(neighbors);
-        for(i = 0; i < count; i++) {
-            if(!Vec2i_list_contains(reached, neighbors[i].item)) {
-                push_Vec2i_list(&reached, neighbors[i].item);
-                push_Vec2i_list(&frontier, neighbors[i].item);
+        //count = count_Vec2i_list(neighbors);
+        //for(i = 0; i < count; i++) {
+        for(tmp = neighbors; tmp; tmp = tmp->next) {
+            if(!Vec2i_list_contains(reached, tmp->item)) {
+                push_Vec2i_list(&reached, tmp->item);
+                push_Vec2i_list(&frontier, tmp->item);
             }
         }
-        destroy_Vec2i_list(&neighbors);
+        destroy_Vec2iPQ(&neighbors);
         neighbors = NULL;
     }
 
     destroy_Vec2i_list(&frontier);
-    destroy_Vec2i_list(&neighbors);
+    destroy_Vec2iPQ(&neighbors);
     return reached;
 }
 
 Vec2iHT* dijkstra_map(Vec2i start, bool monsterblock) {
     Vec2iPQ *frontier = create_Vec2iPQ(start, 0);
-    Vec2iList *neighbors = NULL;
-    Vec2iList *tmp = NULL;
+    Vec2iPQ *neighbors = NULL;
+    Vec2iPQ *tmp = NULL;
     Vec2iHT *camefrom = create_Vec2iHT(5000); 
     Vec2iHT *costSoFar = create_Vec2iHT(5000); 
     Vec2i cost;
@@ -242,7 +280,7 @@ Vec2iHT* dijkstra_map(Vec2i start, bool monsterblock) {
         for(tmp = neighbors; tmp; tmp = tmp->next) {
             next = tmp->item;
             cost = search_Vec2iHT(costSoFar, cur);
-            newcost = cost.x + movement_cost_at(next);
+            newcost = cost.x + 1;//movement_cost_to(cur,next);//movement_cost_at(next);
             cost = search_Vec2iHT(costSoFar, next);
             if(vec_null(search_Vec2iHT(costSoFar, next)) || 
                     (newcost < cost.x)) {
@@ -252,13 +290,13 @@ Vec2iHT* dijkstra_map(Vec2i start, bool monsterblock) {
                 insert_Vec2iHT(camefrom, next, cur);
             }
         }
-        destroy_Vec2i_list(&neighbors);
+        destroy_Vec2iPQ(&neighbors);
         neighbors = NULL;
     }
     //write_htable_csv(costSoFar,start,make_vec(0,0));
     write_dijkstra_map(costSoFar,start);
     destroy_Vec2iPQ(&frontier);
-    destroy_Vec2i_list(&neighbors);
+    destroy_Vec2iPQ(&neighbors);
     destroy_Vec2iHT(camefrom);
     return costSoFar;
 }
@@ -307,11 +345,12 @@ Vec2iList* bfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
     /* Best First Search with early exit, that returns a path from start
      * goal */
     Vec2iList *frontier = create_Vec2i_list(start);
-    Vec2iList *neighbors = NULL;
-    Vec2iList *tmp = NULL;
+    Vec2iPQ *neighbors = NULL;
+    Vec2iPQ *tmp = NULL;
     Vec2iHT *camefrom = create_Vec2iHT(5000); 
     Vec2i cur = NULLVEC;
     Vec2i next = NULLVEC;
+    Vec2iList *result = NULL;
 
     insert_Vec2iHT(camefrom, start, start);
     while(frontier) {
@@ -328,24 +367,25 @@ Vec2iList* bfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
                 insert_Vec2iHT(camefrom, next, cur);
             }
         }
-        destroy_Vec2i_list(&neighbors);
+        destroy_Vec2iPQ(&neighbors);
         neighbors = NULL;
     }
     destroy_Vec2i_list(&frontier);
-    destroy_Vec2i_list(&neighbors);
-    tmp = construct_path(camefrom, start, goal);
+    destroy_Vec2iPQ(&neighbors);
+    result = construct_path(camefrom, start, goal);
     //write_htable_csv(camefrom, start, goal);
     destroy_Vec2iHT(camefrom);
-    return tmp;
+    return result;
 }
 
 Vec2iList* gbfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
     /* Greedy BFS with early exit, returns path from start to goal.
      * Heuristic: Manhattan Distance */
     Vec2iPQ *frontier = create_Vec2iPQ(start, 0);
-    Vec2iList *neighbors = NULL;
-    Vec2iList *tmp = NULL;
+    Vec2iPQ *neighbors = NULL;
+    Vec2iPQ *tmp = NULL;
     Vec2iHT *camefrom = create_Vec2iHT(5000); 
+    Vec2iList *result = NULL;
 
     int p = 0;
     Vec2i cur = NULLVEC;
@@ -367,25 +407,26 @@ Vec2iList* gbfs_path(Vec2i start, Vec2i goal, bool monsterblock) {
                 insert_Vec2iHT(camefrom, next, cur);
             }
         }
-        destroy_Vec2i_list(&neighbors);
+        destroy_Vec2iPQ(&neighbors);
         neighbors = NULL;
     }
     destroy_Vec2iPQ(&frontier);
-    destroy_Vec2i_list(&neighbors);
-    tmp = construct_path(camefrom, start, goal);
+    destroy_Vec2iPQ(&neighbors);
+    result = construct_path(camefrom, start, goal);
     //write_explored_map(camefrom, start, goal);
     //write_htable_csv(camefrom, start, goal);
     destroy_Vec2iHT(camefrom);
-    return tmp;
+    return result;
 }
 
 Vec2iList* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
     Vec2iPQ *frontier = create_Vec2iPQ(start, 0);
-    Vec2iList *neighbors = NULL;
-    Vec2iList *tmp = NULL;
+    Vec2iPQ *neighbors = NULL;
+    Vec2iPQ *tmp = NULL;
     Vec2iHT *camefrom = create_Vec2iHT(5000); 
     Vec2iHT *costSoFar = create_Vec2iHT(5000); 
     Vec2i cost;
+    Vec2iList *result = NULL;
 
     int p = 0;
     int newcost = 0;
@@ -405,7 +446,7 @@ Vec2iList* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
         for(tmp = neighbors; tmp; tmp = tmp->next) {
             next = tmp->item;
             cost = search_Vec2iHT(costSoFar, cur);
-            newcost = cost.x + movement_cost_at(next);
+            newcost = cost.x + movement_cost_to(cur,next); //movement_cost_at(next);
             cost = search_Vec2iHT(costSoFar, next);
             if(vec_null(search_Vec2iHT(costSoFar, next)) || 
                     (newcost < cost.x)) {
@@ -415,16 +456,16 @@ Vec2iList* astar_path(Vec2i start, Vec2i goal, bool monsterblock) {
                 insert_Vec2iHT(camefrom, next, cur);
             }
         }
-        destroy_Vec2i_list(&neighbors);
+        destroy_Vec2iPQ(&neighbors);
         neighbors = NULL;
     }
-    tmp = construct_path(camefrom, start, goal);
+    result = construct_path(camefrom, start, goal);
     //write_dijkstra_map(costSoFar, start);
     //write_explored_map(costSoFar, start, goal);
     destroy_Vec2iPQ(&frontier);
-    destroy_Vec2i_list(&neighbors);
+    destroy_Vec2iPQ(&neighbors);
     destroy_Vec2iHT(costSoFar);
     destroy_Vec2iHT(camefrom);
-    return tmp;
+    return result;
 }
 
