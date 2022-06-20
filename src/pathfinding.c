@@ -77,36 +77,17 @@ int movement_cost_at(Vec2i pos) {
 
 int movement_cost_to(Vec2i a, Vec2i b) {
     /*
-     * . 1 2 3
-     * 1 . b .
-     * 2 a . .
-     * 3 . . . 
-     *
-     * a - b = (1,2) - (2,1) = (-1,1)
-     *
-     * . 1 2 3
-     * 1 . b .
-     * 2 . a .
-     * 3 . . . 
-     * a - b = (2,2) - (2,1) = (0,1)
-     *
-     * . 1 2 3
-     * 1 . b a
-     * 2 . . .
-     * 3 . . . 
-     * a - b = (3,1) - (2,1) = (1,0)
-     *
      * Looking for change in BOTH x and y when subtracting the vectors. A single
-     * diagonal step will also end up as (-1,-1) (-1,1),(1,1), (1,-1)
+     * diagonal step will always end up as (-1,-1) (-1,1),(1,1), (1,-1)
      */
     Vec2i sub = subtract_vec(a,b);
-    static Vec2i tl = {-1,-1};// make_vec(-1,-1);
-    static Vec2i tr = {1,-1}; //make_vec(1,-1);
-    static Vec2i bl = {-1,1}; //make_vec(-1,1);
-    static Vec2i br = {1,1}; //make_vec(1,1);
+    static Vec2i tl = {-1,-1};
+    static Vec2i tr = {1,-1};
+    static Vec2i bl = {-1,1};
+    static Vec2i br = {1,1};
     if (eq_vec(sub,tl) || eq_vec(sub,tr) ||
             eq_vec(sub,bl) || eq_vec(sub,br)) {
-        return 142;//sqrt(2);
+        return 142;
     } else {
         return 100;
     }
@@ -232,8 +213,6 @@ Vec2iList* breadth_first_search(Vec2i start, bool monsterblock) {
     Vec2iList *frontier = create_Vec2i_list(start);
     Vec2iPQ *neighbors = NULL;
     Vec2iPQ *tmp = NULL;
-    int count = 0;
-    int i = 0;
     Vec2i cur = NULLVEC;
 
     while(frontier) {

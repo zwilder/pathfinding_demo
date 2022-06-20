@@ -27,6 +27,18 @@ const int MIN_NUM_ROOMS = 8;
 const int MAX_NUM_ROOMS = 30;
 Tile **g_map = NULL;
 
+/*
+//Inverted colors
+Tile tile_table[NUM_TILES] = 
+{
+    {' ',true,WHITE,WHITE},
+    {'.',false,BLACK,WHITE},
+    {'#',true,BLACK,WHITE},
+    {'<',false,BLACK,WHITE},
+    {'>',false,BLACK,WHITE}
+};
+*/
+//Regular colors
 Tile tile_table[NUM_TILES] = 
 {
     {' ',true,BLACK,BLACK},
